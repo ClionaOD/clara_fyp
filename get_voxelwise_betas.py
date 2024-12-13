@@ -88,14 +88,14 @@ assert len(vertices[ROI]) == len(
 )  # make sure we have the same number of voxels in the brain as we have betas, this is a sanity check
 
 
-category_res_df = pd.DataFrame(columns=list(condition_set))
+category_res_df = pd.DataFrame(columns=list(condition_set), index=vertices[ROI])
 for category, inds in category_inds.items():
     # Find the average beta for the category, eg. np.mean('cat1','cat2','cat3')
     # We're using nanmean to ignore nans, as we have thresholded some voxels
     category_beta_avg = np.nanmean(weighted_average[:, inds], axis=1)
 
     ## store the results in a dataframe
-    category_res_df[category] = category_beta_avg
+    category_res_df.loc[vertices[ROI], category] = category_beta_avg
 
     # Because we were extracting betas from an ROI, we need to use the ROI mask to put the betas back into the brain
     # vertices[ROI] is a list of the indices of the voxels in the ROI
@@ -114,4 +114,4 @@ for category, inds in category_inds.items():
         brain_img, f"./img_results/{category}_{ROI}_twomonth_vcovthreshold10.nii.gz"
     )
 
-category_res_df.to_csv(f"./results/{ROI}_twomonth_vcovthreshold10.csv", index=False)
+category_res_df.to_csv(f"./results/{ROI}_twomonth_vcovthreshold10.csv")

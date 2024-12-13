@@ -10,9 +10,7 @@ from scipy.stats import shapiro
 
 ROI = "both_vvc"
 
-data = pd.read_csv(f"results/{ROI}_twomonth_vcovthreshold10.csv")
-
-brain_mask = "/foundcog/templates/mask/nihpd_asym_02-05_fcgmask_2mm.nii.gz"
+data = pd.read_csv(f"results/{ROI}_twomonth_vcovthreshold10.csv", index_col=0)
 
 # find the 95th percentile of each column
 for condition in data.columns:
@@ -65,7 +63,7 @@ for condition in data.columns:
 
 
 ## Load the atlas and the results
-masker, labels, vertices = pd.read_pickle("./data/twomonth_atlas.pickle")
+masker, labels, _ = pd.read_pickle("./data/twomonth_atlas.pickle")
 
 ## This loop will save out brain images for just the top/bottom voxels
 ## after you do your thing

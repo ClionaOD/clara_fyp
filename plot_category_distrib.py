@@ -32,7 +32,9 @@ sns.set(style="whitegrid")
 for condition in data.columns:
     plt.hist(data[condition], bins=20, alpha=0.5, label=condition)
     plt.tight_layout()
-    plt.savefig(f"{condition}_both_vvc_twomonth_betadist_acrossvoxels.png")
+    plt.savefig(
+        f"beta_distributions/{condition}_both_vvc_twomonth_betadist_acrossvoxels.png"
+    )
     plt.close()
 
 

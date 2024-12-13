@@ -3,6 +3,8 @@ import numpy as np
 
 import nibabel as nib
 
+test = 1
+
 ## Set constants for loading our results
 PATH = "/foundcog/foundcog_results/pictures_roi_betas_bysubj_twomonth_vcovthreshold10_eg_newsubs.pickle"
 BETAREJECT = "vcovthreshold"

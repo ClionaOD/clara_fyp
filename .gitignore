@@ -5,6 +5,9 @@ img_results/*
 dhcp_ga40/*
 dhcp/*
 
+registration/*.nii.gz
+registration/*.mat
+
 # config files
 .vscode/*
 

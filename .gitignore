@@ -11,6 +11,3 @@ registration/*.mat
 
 # config files
 .vscode/*
-
-# temporary
-tractography/*

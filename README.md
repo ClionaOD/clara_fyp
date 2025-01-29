@@ -22,7 +22,7 @@ run_preparerois.sh
 -   The target atlas will be split into individual regions, the seeds will not. - Be sure to check "TODO" flags on this file.
 -   To run it, use the command line:
     ```console
-    claraconyngham@ip-10-0-2-64:~$ ./tractography_prepare/run_preparerois.sh
+    claraconyngham@ip-10-0-2-64:~$ ./tractography_prepare/run_preparerois.sh sub-CC00124XX09 ses-42302
     ```
 
 submit_all_preparerois.sh
@@ -39,4 +39,46 @@ submit_all_preparerois.sh
 
     ```console
     claraconyngham@ip-10-0-2-64:~$ squeue
+    ```
+
+## NEXT, RUN TRACTOGRAPHY
+
+tractography_run/
+
+run_probtrackx2.sh
+
+-   Similar to first step, this will run the tractography on a single subject.
+-   Check all paths and filenames.
+-   This will take a lot longer for each subject, so it's best to run in slurm.
+
+    ```console
+    claraconyngham@ip-10-0-2-64:~$ sbatch ./tractography_run/run_probtrackx2.sh sub-CC00124XX09 ses-42302
+    ```
+
+submit_all_probtrackx2.sh
+
+-   As with preparerois, this will do it for all subjects.
+
+    ```console
+    claraconyngham@ip-10-0-2-64:~$ ./tractography_run/submit_all_probtrackx2.sh
+    ```
+
+## THEN TRANSFORM BACK TO COMMON SPACE FROM NATIVE
+
+run_transform_back.sh
+
+-   This is to go from dHCP40wk_nativespace to dHCP40wk_commonspace
+-   Check line 12 file name, this should be the name of the outputs from probtrackx2. It's looking for seeds_to\_\* which means all files in probtrackx2_clara that start with seeds_to\_
+-   Change -r on line 21 to be the template_t1.nii.gz file in clara_fyp/templates
+
+    ```console
+    claraconyngham@ip-10-0-2-64:~$ sbatch ./tractography_run/run_transform_back.sh sub-CC00124XX09 ses-42302
+    ```
+
+submit_all_transform_back.sh
+
+-   Same idea, this will do all subjects.
+
+    ```console
+    claraconyngham@ip-10-0-2-64:~$ ./tractography_run/submit_all_transform_back.sh
     ```

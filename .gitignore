@@ -1,5 +1,12 @@
+# data files
 data/*
 results/*
 img_results/*
-img_plots/*
+dhcp_ga40/*
+dhcp/*
+
+# config files
 .vscode/*
+
+# temporary
+tractography/*

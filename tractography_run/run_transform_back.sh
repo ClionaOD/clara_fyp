@@ -20,7 +20,7 @@ do
    savefile="${filename}_40wk.${ext}"
    echo $savefile
    # TODO: change -r to be in ./templates/template_t1.nii.gz
-   applywarp -i ${file} -o ${file}_40wk -r /dhcp/rhodri_registration/atlases/dhcp_volume_40weeks/template_t1 -w ${DWIPTH}/${SUBJ}/${SES}/xfm/${SUBJ}_${SES}_from-dwi_to-template40wk_mode-image.nii.gz --interp=trilinear
+   applywarp -i ${file} -o ${savefile} -r /dhcp/rhodri_registration/atlases/dhcp_volume_40weeks/template_t1 -w ${DWIPTH}/${SUBJ}/${SES}/xfm/${SUBJ}_${SES}_from-dwi_to-template40wk_mode-image.nii.gz --interp=trilinear
 done
 
 

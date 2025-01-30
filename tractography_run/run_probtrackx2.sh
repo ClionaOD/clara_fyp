@@ -19,6 +19,6 @@ probtrackx2 --onewaycondition -P 5000 --forcedir --opd --os2t \
 	-m ${DWIPTH}/${SUBJ}/${SES}/dwi/${SUBJ}_${SES}_desc-preproc_space-dwi_brainmask.nii.gz  \
 	--targetmasks=$TEXTOUT  \
 	-x ${DWIPTH}/${SUBJ}/${SES}/probtrackx2_clara/${SUBJ}_${SES}_Schaefer_VVC_seed_regions_dwi.nii.gz \
-	-o fdt_paths_hcp_rhodri
+	-o fdt_paths_A424_clara
 
 touch $DONEFILE

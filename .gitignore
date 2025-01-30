@@ -11,3 +11,4 @@ registration/*.mat
 
 # config files
 .vscode/*
+slurm_logs/*

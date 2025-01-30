@@ -16,6 +16,9 @@ for file in ${DWIPTH}/${SUBJ}/${SES}/probtrackx2_clara/seeds_to_*
 do
    S2T=$(basename -- "$file")
    echo $S2T
+   ext="${file#*.}"; filename="${file%.$ext}"
+   savefile="${filename}_40wk.${ext}"
+   echo $savefile
    # TODO: change -r to be in ./templates/template_t1.nii.gz
    applywarp -i ${file} -o ${file}_40wk -r /dhcp/rhodri_registration/atlases/dhcp_volume_40weeks/template_t1 -w ${DWIPTH}/${SUBJ}/${SES}/xfm/${SUBJ}_${SES}_from-dwi_to-template40wk_mode-image.nii.gz --interp=trilinear
 done

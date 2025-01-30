@@ -13,14 +13,6 @@ rm $DONEFILE
 	
 # TODO: -x change to where seeds are stored
 # TODO: change -o
-# probtrackx2_gpu --onewaycondition -P 5000 --forcedir --opd --os2t \
-# 	--rseed=1234 -s ${DWIPTH}/${SUBJ}/${SES}/dwi.bedpostX/merged \
-# 	--dir=${DWIPTH}/${SUBJ}/${SES}/probtrackx2_clara \
-# 	-m ${DWIPTH}/${SUBJ}/${SES}/dwi/${SUBJ}_${SES}_desc-preproc_space-dwi_brainmask.nii.gz  \
-# 	--targetmasks=$TEXTOUT  \
-# 	-x ${DWIPTH}/${SUBJ}/${SES}/probtrackx2_clara/${SUBJ}_${SES}_Schaefer_VVC_seed_regions_dwi.nii.gz \
-# 	-o fdt_paths_hcp_rhodri
-
 probtrackx2 --onewaycondition -P 5000 --forcedir --opd --os2t \
 	--rseed=1234 -s ${DWIPTH}/${SUBJ}/${SES}/dwi.bedpostX/merged \
 	--dir=${DWIPTH}/${SUBJ}/${SES}/probtrackx2_clara \

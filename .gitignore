@@ -5,6 +5,7 @@ img_results/*
 img_plots/*
 dhcp_ga40/*
 dhcp/*
+probtrackx_seed_arrays/*
 
 registration/*.nii.gz
 registration/*.mat

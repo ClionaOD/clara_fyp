@@ -85,10 +85,6 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    args.sub = "sub-CC00124XX09"
-    args.ses = "ses-42302"
-    args.base_dir = "/home/claraconyngham/clara_fyp"
-
     ## Define paths
     dwi_dir = "/dhcp/dhcp_dmri_pipeline"
 

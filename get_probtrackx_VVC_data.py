@@ -44,11 +44,11 @@ class ProbtrackxVVC:
 
         subject_array = np.zeros((n_voxels, self.n_rois))
         for roi in rois:
+
             results_path = self.get_results_path(roi)
+            if os.path.exists(results_path):
 
-            transformed_path = self.applyAntsWarp(results_path)
-
-            if os.path.exists(transformed_path):
+                transformed_path = self.applyAntsWarp(results_path)
                 results_img = nib.load(transformed_path)
                 results_data = results_img.get_fdata()
 
@@ -63,6 +63,10 @@ class ProbtrackxVVC:
                 ), f"ROI vector shape mismatch: {roi_vector.shape} vs {n_voxels}"
 
                 subject_array[:, roi] = roi_vector
+            else:
+                print(f"File not found: {results_path}")
+                # ADD A COLUMN OF NANs
+                subject_array[:, roi] = np.nan
 
         if np.all(subject_array == 0):
             print(f"No data found for {self.subject} {self.session}")
@@ -80,6 +84,10 @@ if __name__ == "__main__":
         "--base_dir", type=str, default="/home/clionaodoherty/clara_fyp"
     )
     args = parser.parse_args()
+
+    args.sub = "sub-CC00124XX09"
+    args.ses = "ses-42302"
+    args.base_dir = "/home/claraconyngham/clara_fyp"
 
     ## Define paths
     dwi_dir = "/dhcp/dhcp_dmri_pipeline"

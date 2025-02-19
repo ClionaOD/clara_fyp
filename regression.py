@@ -22,7 +22,7 @@ def load_X_sample(
         subsample = pickle.load(open(f"{base_dir}/regression_subsample.pkl", "rb"))
     else:
         print("Sampling data...")
-        subsample = []
+
         for sub in sublist[:nsubs]:
             with open(sub, "rb") as f:
                 subdata = pickle.load(f)
@@ -33,10 +33,20 @@ def load_X_sample(
     return subsample
 
 
+def load_X_data(base_dir, sublist):
+    sub_arrays = []
+    for sub in sublist:
+        with open(sub, "rb") as f:
+            subdata = pickle.load(f)
+            sub_arrays.append(subdata)
+    sub_arrays = np.array(sub_arrays)  # (nsubs, nvoxels, nrois)
+    return sub_arrays
+
+
 def load_y_data(base_dir, category, nsubs=20):
     # Load the functional data
     func_dir = f"{base_dir}/img_results"
-    funcfile = f"{func_dir}/{category}_both_vvc_twomonth_vcovthreshold10.nii.gz"  # TODO: change this to be the correct file if necessary
+    funcfile = f"{func_dir}/{category}_both_vvc_twomonth_vcovthreshold10.nii.gz"  # TODO: change this to be the correct file if necessary. Should be in nihpd-02-05 2mm space
 
     func_img = nib.load(funcfile)
     # we can get the ROI voxels using non nan values, because of way data are saved
@@ -47,7 +57,7 @@ def load_y_data(base_dir, category, nsubs=20):
 
 if __name__ == "__main__":
     base_dir = "/home/clionaodoherty/clara_fyp"
-    dhcp_dir = "/dhcp/clara_analysis"
+    dhcp_dir = "/dhcp/clara_analysis/probtrackx_seed_arrays"
     allsubs = glob.glob(f"{dhcp_dir}/sub-*")
 
     # Load the data
@@ -56,6 +66,12 @@ if __name__ == "__main__":
     X_sample_reshaped = X_sample.reshape(
         -1, X_sample.shape[-1]
     )  # (nvoxels*nsubs, nrois)
+
+    ## TODO: Load the actual data this time.
+    ## Uncomment the following lines and comment out the above lines
+    ## Change all following references to X_sample to X
+    # X = load_X_data(base_dir, allsubs)
+    # X_reshaped = X.reshape(-1, X.shape[-1])  # (nvoxels*nsubs, nrois)
 
     y = load_y_data(base_dir, "cat")
 
@@ -125,5 +141,3 @@ if __name__ == "__main__":
     ## Summary
     # mse tells us how well the model is doing. If it's close to 0, the model is doing well.
     # coefficients tells us which rois are important for the model. This should be of shape (nrois,)
-
-    print()

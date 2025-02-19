@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DWIPATH="/dhcp/dhcp_dmri_pipeline"
-BASEDIR="/home/claraconyngham/clara_fyp"
+BASEDIR="/home/clionaodoherty/clara_fyp"
 
 # Loop through all subjects
 for SUBJDIR in "${DWIPATH}"/sub-CC*; do
@@ -13,8 +13,8 @@ for SUBJDIR in "${DWIPATH}"/sub-CC*; do
            if [[ -d "$SESSDIR" ]]; then
                MYSESS=$(basename -- "$SESSDIR")
                
-               sbatch --output="${BASEDIR}/slurm_logs/${SUBJ}_${MYSESS}_get_voxels.out" \
-                      "${BASEDIR}/get_probtrackx_VVC_data.sh" "$SUBJ" "$MYSESS"
+               sbatch --output="${BASEDIR}/slurm_logs/${SUBJ}_${MYSESS}_get_voxels_%j.out" \
+                      "${BASEDIR}/get_probtrackx_VVC_data.sh" "$SUBJ" "$MYSESS" "$BASEDIR"
            fi
        done
    fi

@@ -5,43 +5,70 @@ import numpy as np
 import pickle
 
 import argparse
+import subprocess
 
 
-# Function to generate the results path
-def get_results_path(subject, session, ROI):
-    return f"{dwi_dir}/{subject}/{session}/probtrackx2_clara/seeds_to_{subject}_{session}_A424_target_regions_dwi_{ROI}_40wk.nii.gz"
+class ProbtrackxVVC:
+    def __init__(self, subject, session, base_dir, dwi_dir, n_rois) -> None:
+        self.subject = subject
+        self.session = session
+        self.base_dir = base_dir
+        self.dwi_dir = dwi_dir
+        self.n_rois = n_rois
 
+    # Function to generate the results path
+    def get_results_path(self, ROI):
+        return f"{self.dwi_dir}/{self.subject}/{self.session}/probtrackx2_clara/seeds_to_{self.subject}_{self.session}_A424_target_regions_dwi_{ROI}_40wk.nii.gz"
 
-def get_sub_ses_arr(subject, session, dwi_dir, mask, n_rois=396):
-    rois = range(n_rois)
+    def applyAntsWarp(self, input_image):
+        # reference_image: image to be transformed to "${BASEDIR}/templates/nihpd-02-05_t1w_fcgmasked_2mm_nocerebellum.nii.gz"
 
-    n_voxels = np.sum(mask)
+        reference_image = f"{self.base_dir}/templates/nihpd-02-05_t1w_fcgmasked_2mm_nocerebellum.nii.gz"
+        transform_1 = (
+            f"{self.base_dir}/registration/dHCP_to_nihpd-02-05-2mm_1Warp.nii.gz"
+        )
+        transform_2 = (
+            f"{self.base_dir}/registration/dHCP_to_nihpd-02-05-2mm_0GenericAffine.mat"
+        )
+        output_image = input_image.replace(".nii.gz", "_to_nihpd-02-05-2mm.nii.gz")
 
-    subject_array = np.zeros((n_voxels, n_rois))
-    for roi in rois:
-        results_path = get_results_path(subject, session, roi)
+        cmd = f"antsApplyTransforms -d 3 -i {input_image} -r {reference_image} -o {output_image} -t {transform_1} -t {transform_2} -n NearestNeighbor"
 
-        if os.path.exists(results_path):
-            results_img = nib.load(results_path)
-            results_data = results_img.get_fdata()
+        subprocess.run(cmd, shell=True)
+        return output_image
 
-            assert (
-                results_data.shape == mask.shape
-            ), f"Shape mismatch: {results_data.shape} vs {mask.shape}"
+    def get_sub_ses_arr(self, mask):
+        rois = range(self.n_rois)
 
-            roi_vector = results_data[mask]
+        n_voxels = np.sum(mask)
 
-            assert (
-                roi_vector.shape == n_voxels
-            ), f"ROI vector shape mismatch: {roi_vector.shape} vs {n_voxels}"
+        subject_array = np.zeros((n_voxels, self.n_rois))
+        for roi in rois:
+            results_path = self.get_results_path(roi)
 
-            subject_array[:, roi] = roi_vector
+            transformed_path = self.applyAntsWarp(results_path)
 
-    if np.all(subject_array == 0):
-        print(f"No data found for {subject} {session}")
-        return None
-    else:
-        return subject_array
+            if os.path.exists(transformed_path):
+                results_img = nib.load(transformed_path)
+                results_data = results_img.get_fdata()
+
+                assert (
+                    results_data.shape == mask.shape
+                ), f"Shape mismatch: {results_data.shape} vs {mask.shape}"
+
+                roi_vector = results_data[mask]
+
+                assert (
+                    roi_vector.shape == n_voxels
+                ), f"ROI vector shape mismatch: {roi_vector.shape} vs {n_voxels}"
+
+                subject_array[:, roi] = roi_vector
+
+        if np.all(subject_array == 0):
+            print(f"No data found for {self.subject} {self.session}")
+            return None
+        else:
+            return subject_array
 
 
 if __name__ == "__main__":
@@ -49,57 +76,32 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--sub", type=str, default=None)
     parser.add_argument("--ses", type=str, default=None)
+    parser.add_argument(
+        "--base_dir", type=str, default="/home/clionaodoherty/clara_fyp"
+    )
     args = parser.parse_args()
 
     ## Define paths
     dwi_dir = "/dhcp/dhcp_dmri_pipeline"
 
-    base_dir = "/home/claraconyngham/clara_fyp"
-
-    template_path = f"{base_dir}/templates/dHCP40wk_template_t1.nii.gz"
-    output_dir = f"{base_dir}/probtrackx_seed_arrays"
+    output_dir = "/dhcp/clara_analysis/probtrackx_seed_arrays"
     os.makedirs(output_dir, exist_ok=True)
 
     # Define VVC values
-    schaefer_vvc = nib.load(f"{base_dir}/atlases/schaefer_40weeks_VVC.nii.gz")
-    VVC_values = np.array(
-        [
-            1,
-            2,
-            3,
-            4,
-            5,
-            7,
-            8,
-            10,
-            11,
-            13,
-            16,
-            201,
-            202,
-            203,
-            204,
-            205,
-            206,
-            207,
-            209,
-            211,
-            212,
-            214,
-        ]
+    schaefer_vvc = nib.load(
+        f"{args.base_dir}/atlases/schaefer_nihpd-02-05_fcg_VVC.nii.gz"
     )
-    VVC_mask = np.isin(schaefer_vvc.get_fdata(), VVC_values)
+    VVC_mask = schaefer_vvc.get_fdata().astype(bool)
 
-    ## Get subject array
-    subject = args.sub
-    session = args.ses
+    print(f"WARNING: will overwrite current 40wk to 2month files in {dwi_dir}")
+    get_vvc = ProbtrackxVVC(args.sub, args.ses, args.base_dir, dwi_dir, n_rois=396)
 
-    subject_array = get_sub_ses_arr(subject, session, dwi_dir, VVC_mask)
+    subject_array = get_vvc.get_sub_ses_arr(VVC_mask)
 
     if subject_array is not None:
         # Save the subject_array for each session to a separate pickle file
         session_output_file = os.path.join(
-            output_dir, f"{subject}_{session}_arrays.pkl"
+            output_dir, f"{args.sub}_{args.ses}_nrois-{get_vvc.n_rois}_arrays.pkl"
         )
         with open(session_output_file, "wb") as f:
             pickle.dump(subject_array, f)

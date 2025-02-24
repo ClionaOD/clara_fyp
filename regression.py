@@ -121,21 +121,32 @@ if __name__ == "__main__":
             f"  Test:  index={test_index}, group={np.unique(groups_train[test_index])}"
         )
 
-    model_cv = ElasticNetCV(
-        l1_ratio=[0.1, 0.5, 0.7, 0.9, 0.95, 0.99, 1],
-        n_alphas=100,
-        cv=group_kfold.split(X_train, y_train, groups_train),
-        random_state=42,
-        fit_intercept=True,  # if False, data is expected to be already centered
-        n_jobs=None,  # if -1, use all available CPUs
-    )
-    model_cv.fit(X_train, y_train)
+    if os.path.exists(f"{base_dir}/best_alpha_l1.pkl"):
+        # load the best alpha and l1_ratio
+        best_alpha, l1_ratio = pickle.load(open(f"{base_dir}/best_alpha_l1.pkl", "rb"))
+    #   load the stuff
+    #   best_alpha = load (same for best l1)
+    else:
+    #   do the stuff in lines 129 - 143
 
-    ## Check fit params
-    best_alpha = model_cv.alpha_
-    print(f"Best alpha: {best_alpha}")
-    l1_ratio = model_cv.l1_ratio_
-    print(f"Best l1_ratio: {l1_ratio}")
+        model_cv = ElasticNetCV(
+            l1_ratio=[0.1, 0.5, 0.7, 0.9, 0.95, 0.99, 1],
+            n_alphas=100,
+            cv=group_kfold.split(X_train, y_train, groups_train),
+            random_state=42,
+            fit_intercept=True,  # if False, data is expected to be already centered
+            n_jobs=None,  # if -1, use all available CPUs
+        )
+        model_cv.fit(X_train, y_train)
+
+        ## Check fit params
+        best_alpha = model_cv.alpha_
+        print(f"Best alpha: {best_alpha}")
+        l1_ratio = model_cv.l1_ratio_
+        print(f"Best l1_ratio: {l1_ratio}")
+        # save the best alpha and l1_ratio into a pickle file
+        pickle.dump((best_alpha, l1_ratio), open(f"{base_dir}/best_alpha_l1.pkl", "wb"))
+    
 
     # To get out the coefficients, we need to refit the model with the best alpha
     model = ElasticNet(

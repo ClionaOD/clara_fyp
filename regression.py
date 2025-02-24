@@ -15,7 +15,7 @@ def load_X_sample(
     base_dir,
     sublist,
     nsubs=20,
-    nvoxels=4346,  # this is how many are in our 2 mm category models from twomonth space
+    nvoxels=4355,  # this is how many are in our 2 mm category models from twomonth space
 ):
     ## It takes a while, so let's save it out for easier loading later
     if os.path.exists(f"{base_dir}/regression_subsample.pkl"):
@@ -23,13 +23,14 @@ def load_X_sample(
     else:
         print("Sampling data...")
 
+        subsample = []
         for sub in sublist[:nsubs]:
             with open(sub, "rb") as f:
                 subdata = pickle.load(f)
+                subdata[np.isnan(subdata)] = 0
                 subsample.append(subdata[:nvoxels, :])
+        subsample = np.array(subsample)  # (nsubs, nvoxels, nrois)
         pickle.dump(subsample, open(f"{base_dir}/regression_subsample.pkl", "wb"))
-
-    subsample = np.array(subsample)  # (nsubs, nvoxels, nrois)
     return subsample
 
 
@@ -41,6 +42,9 @@ def load_X_data(base_dir, sublist):
         for sub in sublist:
             with open(sub, "rb") as f:
                 subdata = pickle.load(f)
+                # because the values in X are counts out of number of streamlines
+                # we can replace the nans with 0s
+                subdata[np.isnan(subdata)] = 0
                 sub_arrays.append(subdata)
         sub_arrays = np.array(sub_arrays)  # (nsubs, nvoxels, nrois)
         pickle.dump(sub_arrays, open(f"{base_dir}/regression_subarrays.pkl", "wb"))
@@ -69,14 +73,10 @@ if __name__ == "__main__":
 
     # Load the data
     # For testing purposes, we're just going to use 5 subjects and sample their data along the n_voxel axis
-    #X_sample = load_X_sample(base_dir, allsubs)
-    #X_sample_reshaped = X_sample.reshape(
-   #     -1, X_sample.shape[-1]
-    #)  # (nvoxels*nsubs, nrois)
+    # X = load_X_sample(base_dir, allsubs)
+    # X_reshaped = X.reshape(-1, X.shape[-1])  # (nvoxels*nsubs, nrois)
 
-    schaefer_vvc = nib.load(
-        f"{base_dir}/atlases/schaefer_nihpd-02-05_fcg_VVC.nii.gz"
-    )
+    schaefer_vvc = nib.load(f"{base_dir}/atlases/schaefer_nihpd-02-05_fcg_VVC.nii.gz")
     VVC_mask = schaefer_vvc.get_fdata().astype(bool)
 
     ## TODO: Load the actual data this time.
@@ -86,6 +86,8 @@ if __name__ == "__main__":
     X_reshaped = X.reshape(-1, X.shape[-1])  # (nvoxels*nsubs, nrois)
 
     y = load_y_data(base_dir, "cat", nsubs=X.shape[0], masker=VVC_mask)
+    # replace nans with the mean of the data
+    y[np.isnan(y)] = np.nanmean(y)
 
     # check that the data is the same shape
     assert (
@@ -149,6 +151,7 @@ if __name__ == "__main__":
     ## Now we can evaluate the model on the test set
     y_pred = model.predict(X_test)
     mse = mean_squared_error(y_test, y_pred)
+    print(f"MSE: {mse}")
 
     ## Summary
     # mse tells us how well the model is doing. If it's close to 0, the model is doing well.

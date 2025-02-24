@@ -34,16 +34,20 @@ def load_X_sample(
 
 
 def load_X_data(base_dir, sublist):
-    sub_arrays = []
-    for sub in sublist:
-        with open(sub, "rb") as f:
-            subdata = pickle.load(f)
-            sub_arrays.append(subdata)
-    sub_arrays = np.array(sub_arrays)  # (nsubs, nvoxels, nrois)
+    if os.path.exists(f"{base_dir}/regression_subarrays.pkl"):
+        sub_arrays = pickle.load(open(f"{base_dir}/regression_subarrays.pkl", "rb"))
+    else:
+        sub_arrays = []
+        for sub in sublist:
+            with open(sub, "rb") as f:
+                subdata = pickle.load(f)
+                sub_arrays.append(subdata)
+        sub_arrays = np.array(sub_arrays)  # (nsubs, nvoxels, nrois)
+        pickle.dump(sub_arrays, open(f"{base_dir}/regression_subarrays.pkl", "wb"))
     return sub_arrays
 
 
-def load_y_data(base_dir, category, nsubs=20):
+def load_y_data(base_dir, category, nsubs=20, masker=None):
     # Load the functional data
     func_dir = f"{base_dir}/img_results"
     funcfile = f"{func_dir}/{category}_both_vvc_twomonth_vcovthreshold10.nii.gz"  # TODO: change this to be the correct file if necessary. Should be in nihpd-02-05 2mm space
@@ -51,43 +55,51 @@ def load_y_data(base_dir, category, nsubs=20):
     func_img = nib.load(funcfile)
     # we can get the ROI voxels using non nan values, because of way data are saved
     func_data = func_img.get_fdata()
-    func_data = func_data[~np.isnan(func_data)]  # (nvoxels,)
+    if masker is None:
+        func_data = func_data[~np.isnan(func_data)]  # (nvoxels,)
+    else:
+        func_data = func_data[masker]
     return np.concatenate([func_data for i in range(nsubs)])  # (nvoxels*nsubs,)
 
 
 if __name__ == "__main__":
-    base_dir = "/home/clionaodoherty/clara_fyp"
+    base_dir = "/home/claraconyngham/clara_fyp"
     dhcp_dir = "/dhcp/clara_analysis/probtrackx_seed_arrays"
     allsubs = glob.glob(f"{dhcp_dir}/sub-*")
 
     # Load the data
     # For testing purposes, we're just going to use 5 subjects and sample their data along the n_voxel axis
-    X_sample = load_X_sample(base_dir, allsubs)
-    X_sample_reshaped = X_sample.reshape(
-        -1, X_sample.shape[-1]
-    )  # (nvoxels*nsubs, nrois)
+    #X_sample = load_X_sample(base_dir, allsubs)
+    #X_sample_reshaped = X_sample.reshape(
+   #     -1, X_sample.shape[-1]
+    #)  # (nvoxels*nsubs, nrois)
+
+    schaefer_vvc = nib.load(
+        f"{base_dir}/atlases/schaefer_nihpd-02-05_fcg_VVC.nii.gz"
+    )
+    VVC_mask = schaefer_vvc.get_fdata().astype(bool)
 
     ## TODO: Load the actual data this time.
     ## Uncomment the following lines and comment out the above lines
     ## Change all following references to X_sample to X
-    # X = load_X_data(base_dir, allsubs)
-    # X_reshaped = X.reshape(-1, X.shape[-1])  # (nvoxels*nsubs, nrois)
+    X = load_X_data(base_dir, allsubs)
+    X_reshaped = X.reshape(-1, X.shape[-1])  # (nvoxels*nsubs, nrois)
 
-    y = load_y_data(base_dir, "cat")
+    y = load_y_data(base_dir, "cat", nsubs=X.shape[0], masker=VVC_mask)
 
     # check that the data is the same shape
     assert (
-        X_sample_reshaped.shape[0] == y.shape[0]
+        X_reshaped.shape[0] == y.shape[0]
     ), "X and y n_voxel shapes don't match along 1st dimension"
 
     # Get group (subject) labels for doing GroupKFold cross validation
     # These should be the same shape as the y data
     # and should point to values in the 2nd dimension of the X_sample_reshaped data that correspond to the same subject
-    group_labels = np.repeat(np.arange(X_sample.shape[0]), X_sample.shape[1])
+    group_labels = np.repeat(np.arange(X.shape[0]), X.shape[1])
 
     splitter = GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
-    split = next(splitter.split(X_sample_reshaped, y, group_labels))
-    X_train, X_test = X_sample_reshaped[split[0]], X_sample_reshaped[split[1]]
+    split = next(splitter.split(X_reshaped, y, group_labels))
+    X_train, X_test = X_reshaped[split[0]], X_reshaped[split[1]]
     y_train, y_test = y[split[0]], y[split[1]]
     groups_train, groups_test = (
         group_labels[split[0]],

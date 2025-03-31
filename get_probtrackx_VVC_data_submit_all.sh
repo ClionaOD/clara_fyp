@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DWIPATH="/dhcp/dhcp_dmri_pipeline"
-BASEDIR="/home/clionaodoherty/clara_fyp"
+BASEDIR="/home/claraconyngham/clara_fyp"
 
 # Loop through all subjects
 for SUBJDIR in "${DWIPATH}"/sub-CC*; do
